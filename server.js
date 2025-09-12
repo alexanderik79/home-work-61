@@ -2,6 +2,13 @@ const express = require('express');
 const app = express();
 const PORT = 3000;
 
+require('dotenv').config();
+const SECRET = process.env.SECRET;
+
+
+const jwt = require('jsonwebtoken');
+
+
 const authMiddleware = require('./middleware/auth');
 
 const cookieParser = require('cookie-parser');
@@ -13,7 +20,7 @@ app.get('/set-theme/:theme', (req, res) => {
   res.send(`Theme set to ${theme}`);
 });
 
-
+app.use(express.json());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 

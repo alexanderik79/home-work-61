@@ -1,6 +1,8 @@
 // middleware/auth.js
 const jwt = require('jsonwebtoken');
-const SECRET = 'All the world a stage'; 
+require('dotenv').config();
+const SECRET = process.env.SECRET;
+
 
 function authMiddleware(req, res, next) {
   const token = req.cookies.token;
