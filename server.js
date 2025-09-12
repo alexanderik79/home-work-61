@@ -2,21 +2,27 @@ const express = require('express');
 const app = express();
 const PORT = 3000;
 
-// Статические файлы и парсинг форм
+const authMiddleware = require('./middleware/auth');
+
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
+app.get('/set-theme/:theme', (req, res) => {
+  const theme = req.params.theme;
+  res.cookie('theme', theme, { maxAge: 900000 });
+  res.send(`Theme set to ${theme}`);
+});
+
+
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 
-// Настройка папки с шаблонами
 app.set('views', './views');
 
 // Подключение шаблонов
 app.set('view engine', 'pug'); // PUG — основной
 app.engine('ejs', require('ejs').__express); // EJS — вручную подключаем
 
-// Запуск сервера
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
 
 
 // 👥 Данные пользователей
@@ -34,31 +40,76 @@ const articles = [
 ];
 
 
-// 👥 Маршруты пользователей (PUG)
+
+
 app.get('/users', (req, res) => {
-  res.render('users/index', { users });
+  const theme = req.cookies.theme || 'light';
+  res.render('users/index', { users, theme });
 });
+
 
 app.get('/users/:userId', (req, res) => {
   const user = users.find(u => u.id === parseInt(req.params.userId));
+  const theme = req.cookies.theme || 'light';
   if (user) {
-    res.render('users/detail', { user });
+    res.render('users/detail', { user, theme });
   } else {
     res.status(404).send('User not found');
   }
 });
 
 
+
 // 📄 Маршруты статей (EJS)
 app.get('/articles', (req, res) => {
-  res.render('articles/index.ejs', { articles });
+  const theme = req.cookies.theme || 'light';  
+  res.render('articles/index.ejs', { articles, theme });
 });
+
+
 
 app.get('/articles/:articleId', (req, res) => {
   const article = articles.find(a => a.id === parseInt(req.params.articleId));
+  const theme = req.cookies.theme || 'light';
   if (article) {
-    res.render('articles/detail.ejs', { article });
+    res.render('articles/detail.ejs', { article, theme });
   } else {
     res.status(404).send('Article not found');
   }
+});
+
+
+app.get('/set-theme/:theme', (req, res) => {
+  const theme = req.params.theme;
+  if (theme !== 'light' && theme !== 'dark') {
+    return res.status(400).send('Invalid theme');
+  }
+  res.cookie('theme', theme, { maxAge: 7 * 24 * 60 * 60 * 1000 }); 
+  res.send(`Theme set to ${theme}`);
+});
+
+
+app.post('/login', (req, res) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).send('Username required');
+
+  const token = jwt.sign({ username }, SECRET, { expiresIn: '1h' });
+  res.cookie('token', token, { httpOnly: true });
+
+  console.log(`[LOGIN] User "${username}" logged in`);
+  console.log(`[LOGIN] JWT issued: ${token}`);
+
+  res.send(`JWT: ${token}`);
+});
+
+
+
+app.get('/dashboard', authMiddleware, (req, res) => {
+  console.log(`[DASHBOARD] Access granted to "${req.user.username}"`);
+  res.send(`Welcome to your dashboard, ${req.user.username}`);
+});
+
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

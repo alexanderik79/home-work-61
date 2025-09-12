@@ -2,8 +2,9 @@ doctype html
 html
   head
     title User Detail
+    link(rel="icon", href="/favicon.ico")
     link(rel="stylesheet", href="/styles.css")
-  body
+  body(class=theme)
     h1 #{user.name}
     p Age: #{user.age}
     a(href="/users") ← Back to users
