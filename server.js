@@ -16,7 +16,8 @@ app.use(cookieParser());
 
 app.get('/set-theme/:theme', (req, res) => {
   const theme = req.params.theme;
-  res.cookie('theme', theme, { maxAge: 900000 });
+  const tenYears = 10 * 365 * 24 * 60 * 60 * 1000;
+  res.cookie('theme', theme, { maxAge: tenYears });
   res.send(`Theme set to ${theme}`);
 });
 
@@ -83,16 +84,6 @@ app.get('/articles/:articleId', (req, res) => {
   } else {
     res.status(404).send('Article not found');
   }
-});
-
-
-app.get('/set-theme/:theme', (req, res) => {
-  const theme = req.params.theme;
-  if (theme !== 'light' && theme !== 'dark') {
-    return res.status(400).send('Invalid theme');
-  }
-  res.cookie('theme', theme, { maxAge: 7 * 24 * 60 * 60 * 1000 }); 
-  res.send(`Theme set to ${theme}`);
 });
 
 
